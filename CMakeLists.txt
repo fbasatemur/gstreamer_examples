@@ -7,13 +7,14 @@ project(${PROJECT_NAME})
 
 
 set(HEADERS
+        config.hpp
         gst_multicast_handler.hpp)
 
 set(SOURCES
         main.cpp)
 
 
-find_package(PkgConfig REQUIRED)
+find_package(PkgConfig)
 
 pkg_search_module(GST REQUIRED 
         gstreamer-1.0>=1.4
@@ -25,5 +26,5 @@ pkg_search_module(GST REQUIRED
 
 add_executable(${PROJECT_NAME} ${HEADERS} ${SOURCES})
 
-target_include_directories(gstreamer PRIVATE ${GTK3_INCLUDE_DIRS} ${GST_INCLUDE_DIRS})
-target_link_libraries(gstreamer ${GTK3_LIBRARIES} ${GST_LIBRARIES})
+target_include_directories(${PROJECT_NAME} PRIVATE ${GST_INCLUDE_DIRS})
+target_link_libraries(${PROJECT_NAME} ${GST_LIBRARIES})
