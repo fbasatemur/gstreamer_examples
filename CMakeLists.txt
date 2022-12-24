@@ -24,7 +24,10 @@ pkg_search_module(GST REQUIRED
         )
 
 
+find_package( OpenCV REQUIRED )
+include_directories( ${OpenCV_INCLUDE_DIRS} )
+
 add_executable(${PROJECT_NAME} ${HEADERS} ${SOURCES})
 
 target_include_directories(${PROJECT_NAME} PRIVATE ${GST_INCLUDE_DIRS})
-target_link_libraries(${PROJECT_NAME} ${GST_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} ${GST_LIBRARIES} ${OpenCV_LIBS})
