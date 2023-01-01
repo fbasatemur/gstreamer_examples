@@ -1,12 +1,13 @@
 #ifndef GST_MULTICAST_HANDLER_CPP
 #define GST_MULTICAST_HANDLER_CPP
 
-#include "config.hpp"
-#include <string>
 #include <gstreamer-1.0/gst/gst.h>
-#include <iostream>
 #include <opencv2/opencv.hpp>
+#include <iostream>
 #include <thread>
+#include <string>
+#include "config.hpp"
+
 
 #define GST_CHECK(ptr, msg) {   \
     if(not ptr){                \
@@ -28,16 +29,16 @@ struct GST_Struct{
     bool is_initialized{false};
     GST_Struct(): appsink(nullptr), gst_pipeline(nullptr), sample{nullptr}, buffer{nullptr}{ gst_init(nullptr, nullptr); }
 
-    void SetState(const char* pipeline){
-        gst_pipeline = gst_parse_launch(pipeline, NULL);
+    void StartPipeline(const char* pipeline){
+        gst_pipeline = gst_parse_launch(pipeline, nullptr);
         g_assert(gst_pipeline);
 
         gst_element_set_state(gst_pipeline, GST_STATE_PLAYING);
     }
 
     GstFlowReturn SetFrameInfo(){
-        GstStructure* info = NULL;
-        GstCaps* caps = NULL;
+        GstStructure* info = nullptr;
+        GstCaps* caps = nullptr;
 
         caps = gst_sample_get_caps (sample);
         GST_CHECK(caps, "get caps is null");
@@ -51,8 +52,7 @@ struct GST_Struct{
         return GST_FLOW_OK;
     }
 
-    // Convert gstreamer data to OpenCV Mat
-    void ConvertGSTMap2Mat(){
+    void ReadGSTMap2Mat(){
         gst_buffer_map(buffer, &map, GST_MAP_READ);
         frame = cv::Mat(frame_shape, CV_8UC3, (char *)map.data, cv::Mat::AUTO_STEP);
     }
@@ -71,14 +71,18 @@ struct GST_Struct{
             gst_self->is_initialized = true;
         }
 
-        gst_self->ConvertGSTMap2Mat();
+        gst_self->ReadGSTMap2Mat();
+
+        gst_buffer_unmap(gst_self->buffer, &gst_self->map);
+        gst_sample_unref(gst_self->sample);
+
         return GST_FLOW_OK;
     }
 
     void ConnectAppsink(const char* appsink_str){
         appsink = gst_bin_get_by_name(GST_BIN(gst_pipeline), (const gchar*)(appsink_str));
         if (not appsink){
-            std::cerr << "appsink is NULL !\n";
+            std::cerr << "GST appsink is NULL !\n";
             exit(0);
         }
     }
@@ -88,13 +92,13 @@ struct GST_Struct{
         g_signal_connect(appsink, "new-sample", G_CALLBACK(Callback), this);
     }
 
-    cv::Mat GetFrameFromConnection(){
+    const cv::Mat* GetFrameFromConnection(){
         while (frame.empty()){
             std::cerr << "Frame is not exist !\n";
             std::this_thread::sleep_for(GST_PARAMS::SLEEP_TIME);
         }
 
-        return frame;
+        return &frame;
     }
 
     ~GST_Struct(){
@@ -103,8 +107,6 @@ struct GST_Struct{
             gst_object_unref (gst_pipeline);
         }
         if(appsink) gst_object_unref (appsink);
-        if(buffer) gst_buffer_unmap (buffer, &map);
-        if(sample) gst_sample_unref (sample);
     }
 };
 
@@ -117,13 +119,13 @@ public:
     MulticastUDPHandler() = default;
 
     static void StartListen(const char* pipeline){
-        gst_stream.SetState(pipeline);
-        gst_stream.ConnectAppsink("appsink0");
+        gst_stream.StartPipeline(pipeline);
+        gst_stream.ConnectAppsink(GST_PARAMS::appsink_name.c_str());
         gst_stream.StartCallBack();
     }
 
     static cv::Mat GetFrame(){
-        return gst_stream.GetFrameFromConnection();
+        return gst_stream.GetFrameFromConnection()->clone();
     }
     
     ~MulticastUDPHandler() = default;

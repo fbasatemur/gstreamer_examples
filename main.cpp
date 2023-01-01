@@ -1,4 +1,3 @@
-#include <iostream>
 #include "config.hpp"
 #include "gst_multicast_handler.hpp"
 #define ESC 27
@@ -6,7 +5,7 @@
 int main()
 {
     cv::Mat frame;
-    MulticastUDPHandler::StartListen(GST_PARAMS::webcam_client_pipeline.c_str());
+    MulticastUDPHandler::StartListen(GST_PARAMS::udp_client_pipeline.c_str());
 
     while(true)
     {
