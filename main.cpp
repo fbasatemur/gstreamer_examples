@@ -1,6 +1,7 @@
 #include <iostream>
 #include "config.hpp"
 #include "gst_multicast_handler.hpp"
+#define ESC 27
 
 int main()
 {
@@ -10,9 +11,9 @@ int main()
     while(true)
     {
         frame = MulticastUDPHandler::GetFrame();
-        if (cv::waitKey(30) == 27 || frame.empty())		// esc basilana kadar ya da matris bos ise
+        if (cv::waitKey(30) == ESC or frame.empty())
 			break;
-		imshow("webcam", frame);
+		imshow("Webcam | ESC", frame);
     }
     
     return 0;

@@ -2,23 +2,23 @@
 #define CONFIG_HPP
 
 #include <string>
+#include <chrono>
 
 namespace GST_PARAMS{
+    using namespace std::chrono_literals;
 
-    static const constexpr int FRAME_WIDTH = 640; 
-    static const constexpr int FRAME_HEIGHT = 480;
+    static const constexpr auto SLEEP_TIME = 20ms;
+    static const constexpr int FRAME_WIDTH = 1280;
+    static const constexpr int FRAME_HEIGHT = 720;
     static const std::string multicast_ip{"127.0.0.1"};
     static const std::string multicast_port{"5000"};
 
     // webcam_server_pipeline: gst-launch-1.0 -v v4l2src device=/dev/video0 ! image/jpeg,width=1280,height=720,type=video,framerate=30/1 ! jpegdec ! videoscale ! videoconvert ! x264enc tune=zerolatency ! rtph264pay ! udpsink host=127.0.0.1 port=5000 --verbose
-    // webcam_client_pipeline: gst-launch-1.0 -vc udpsrc port=5000 close-socket=false multicast-iface=false auto-multicast=true ! application/x-rtp, payload=96 ! rtpjitterbuffer ! rtph264depay ! avdec_h264 ! fpsdisplaysink  sync=false --verbose
 
-//    static std::string webcam_client_pipeline = std::string{"udpsrc multicast-group=" + multicast_ip + " port=" + multicast_port +
-//                                                             " ! application/x-rtp, media=video, encoding-name=H264 ! rtpjitterbuffer ! rtph264depay ! h264parse ! avdec_h264 ! xvimagesink name=appsink0"};
-
-    static std::string webcam_client_pipeline = std::string{"udpsrc multicast_group=127.0.0.1 port=5000 auto-multicast=true ! application/x-rtp, payload=96 ! rtpjitterbuffer ! rtph264depay ! avdec_h264 ! appsink name=appsink0"};
-
-
+    static std::string webcam_client_pipeline = std::string{"udpsrc multicast-group=" + multicast_ip + " port=" + multicast_port +
+                                                            " ! application/x-rtp, payload=96 ! rtph264depay ! h264parse ! avdec_h264 "
+                                                            "! decodebin ! videoconvert ! video/x-raw,width=" + std::to_string(FRAME_WIDTH) + ",height=" + std::to_string(FRAME_HEIGHT) + ",format=BGR ! videoconvert "
+                                                            "! appsink name=appsink0 emit-signals=true sync=false max-buffers=1 drop=true"};
 
 
 
