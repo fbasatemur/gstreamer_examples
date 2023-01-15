@@ -8,7 +8,7 @@ project(${PROJECT_NAME})
 
 set(HEADERS
         config.hpp
-        gst_multicast_handler.hpp)
+        gst_multicast_receiver.hpp)
 
 set(SOURCES
         main.cpp)

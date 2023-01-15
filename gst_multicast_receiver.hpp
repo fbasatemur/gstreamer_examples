@@ -1,5 +1,5 @@
-#ifndef GST_MULTICAST_HANDLER_CPP
-#define GST_MULTICAST_HANDLER_CPP
+#ifndef GST_MULTICAST_RECEIVER_CPP
+#define GST_MULTICAST_RECEIVER_CPP
 
 #include <gstreamer-1.0/gst/gst.h>
 #include <opencv2/opencv.hpp>
@@ -23,11 +23,18 @@ struct GST_Struct{
     GstBuffer* buffer;
     GstMapInfo map;
 
+    bool frame_initalized;
     cv::Size frame_shape;
     cv::Mat frame;
 
-    bool is_initialized{false};
-    GST_Struct(): appsink(nullptr), gst_pipeline(nullptr), sample{nullptr}, buffer{nullptr}{ gst_init(nullptr, nullptr); }
+    GST_Struct(){
+        appsink = nullptr;
+        gst_pipeline = nullptr;
+        sample = nullptr;
+        buffer = nullptr;
+        frame_initalized = false;
+        gst_init(nullptr, nullptr);
+    }
 
     void StartPipeline(const char* pipeline){
         gst_pipeline = gst_parse_launch(pipeline, nullptr);
@@ -37,8 +44,8 @@ struct GST_Struct{
     }
 
     GstFlowReturn SetFrameInfo(){
-        GstStructure* info = nullptr;
-        GstCaps* caps = nullptr;
+        GstStructure* info {nullptr};
+        GstCaps* caps {nullptr};
 
         caps = gst_sample_get_caps (sample);
         GST_CHECK(caps, "get caps is null");
@@ -46,7 +53,6 @@ struct GST_Struct{
         info = gst_caps_get_structure (caps, 0);
         GST_CHECK(info, "get info is null");
 
-        // convert gstreamer data to OpenCV Mat
         gst_structure_get_int (info, "width", &frame_shape.width);
         gst_structure_get_int (info, "height", &frame_shape.height);
         return GST_FLOW_OK;
@@ -64,11 +70,12 @@ struct GST_Struct{
         gst_self->buffer = gst_sample_get_buffer (gst_self->sample);
         GST_CHECK(gst_self->buffer, "get buffer is null");
 
-        if(not gst_self->is_initialized){
-
+        if(not gst_self->frame_initalized)
+        {
             if(gst_self->SetFrameInfo() != GST_FLOW_OK)
                 return GST_FLOW_ERROR;
-            gst_self->is_initialized = true;
+
+            gst_self->frame_initalized = true;
         }
 
         gst_self->ReadGSTMap2Mat();
@@ -111,12 +118,12 @@ struct GST_Struct{
 };
 
 
-class MulticastUDPHandler{
+class UDPMulticastReceiver{
 
     friend struct GST_Struct;
     inline static GST_Struct gst_stream;
 public:
-    MulticastUDPHandler() = default;
+    UDPMulticastReceiver() = default;
 
     static void StartListen(const char* pipeline){
         gst_stream.StartPipeline(pipeline);
@@ -128,7 +135,7 @@ public:
         return gst_stream.GetFrameFromConnection()->clone();
     }
     
-    ~MulticastUDPHandler() = default;
+    ~UDPMulticastReceiver() = default;
 };
 
-#endif // GST_MULTICAST_HANDLER_CPP
+#endif // GST_MULTICAST_RECEIVER_CPP

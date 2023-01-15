@@ -1,15 +1,15 @@
 #include "config.hpp"
-#include "gst_multicast_handler.hpp"
+#include "gst_multicast_receiver.hpp"
 #define ESC 27
 
 int main()
 {
     cv::Mat frame;
-    MulticastUDPHandler::StartListen(GST_PARAMS::udp_client_pipeline.c_str());
+    UDPMulticastReceiver::StartListen(GST_PARAMS::udp_client_pipeline.c_str());
 
     while(true)
     {
-        frame = MulticastUDPHandler::GetFrame();
+        frame = UDPMulticastReceiver::GetFrame();
         if (cv::waitKey(30) == ESC or frame.empty())
 			break;
 		imshow("Webcam | ESC", frame);
