@@ -13,7 +13,7 @@ Or, if you want to get from a specif device:
 v4l2-ctl --list-formats-ext --device=0
 ```
 
-![device_info](https://github.com/fbasatemur/gstreamer_example/blob/main/video/device_info.png)
+![device_info](https://github.com/fbasatemur/gstreamer_examples/blob/main/video/device_info.png)
 
 If I want use to 1280x720 display resolution and 30 FPS.  
 
